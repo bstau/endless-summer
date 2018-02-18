@@ -9,7 +9,6 @@
 # Usage:
 #  summer.py /directory [/or/file ...]
 
-import binascii
 import collections
 import hashlib
 import os
@@ -17,12 +16,12 @@ import random
 import signal
 import sqlite3
 import sys
-import traceback
 import threading
 import time
 import Queue
 
 BLKSIZE = 10485760
+CLEAR_LINE = '\r                                                 \r'
 HASHES = {alg: getattr(hashlib, alg)() for alg in ('md5', 'sha1', 'sha256')}
 
 class FileInfo(collections.namedtuple('FileInfo',
@@ -208,14 +207,14 @@ def main(argv):
 
   # While we're hashing data, show a progress update. First, clear the
   # previous status update.
-  sys.stderr.write('\r             ')
+  sys.stderr.write(CLEAR_LINE)
   while any([h.is_alive() for h in hash_threads]):
     if abort.is_set(): return
     sys.stderr.write('\rHashed %s of %s files..' % (hashcount, scancount))
     time.sleep(0.2)
 
   # Wait for the hashing threads to complete.
-  sys.stderr.write('\r                                                   ')
+  sys.stderr.write(CLEAR_LINE)
   sys.stderr.write('\rCleaning up...')
   inqueue.join()
   [h.join() for h in hash_threads]
@@ -224,7 +223,7 @@ def main(argv):
   work_done.set()
   dbqueue.join()
   db_thread.join()
-  sys.stderr.write('\r                                                 \r')
+  sys.stderr.write(CLEAR_LINE)
 
 
 if __name__ == '__main__':
